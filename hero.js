@@ -48,7 +48,7 @@ var move = function(gameData, helpers) {
   });
 
   //Heal no matter what if low health
-  if (myHero.health < 40) {
+  if (myHero.health <= 40) {
     return healthWellStats.direction;
   //Finish Healing / oportunistic healing
   } else if (myHero.health < 100 && healthWellStats.distance === 1) {
