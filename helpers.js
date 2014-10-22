@@ -67,10 +67,18 @@ helpers.findNearestObjectDirectionAndDistance = function(board, fromTile, tileCa
 
     // Loop through cardinal directions
     var directions = ['North', 'East', 'South', 'West'];
-    for (var i = 0; i < directions.length; i++) {
+    while (directions.length > 0) {
 
       // For each of the cardinal directions get the next tile...
-      var direction = directions[i];
+      // randomly select direction from available options to try...
+      index = Math.floor(Math.random() * directions.length)
+      /*
+       * console.log("Directions available: " + directions.toString())
+       * console.log("Index selected: " + index.toString() + " (out of " + directions.length.toString() + ")")
+       */
+      var direction = directions.splice(index, 1);
+      /* console.log("Directions left: " + directions.toString()) */
+      direction = direction[0] // splice returns array
 
       // ...Use the getTileNearby helper method to do this
       var nextTile = helpers.getTileNearby(board, dft, dfl, direction);
@@ -157,7 +165,7 @@ helpers.findNearestNonTeamDiamondMine = function(gameData) {
     } else {
       return false;
     }
-  }, board);
+  });
 
   //Return the direction that needs to be taken to achieve the goal
   return pathInfoObject.direction;
