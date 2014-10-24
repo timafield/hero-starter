@@ -13,9 +13,20 @@
  *  - Opportunistically get diamonds, health etc.
 */
 
+// increments(or sets) and gets turn number
+function getTurn(hero) {
+  if (typeof hero.turn_number__ === 'undefined') {
+    hero.turn_number__ = 1;
+    return 1;
+  } else {
+    hero.turn_number__++;
+    return hero.turn_number__;
+  }
+}
+
 var move = function(gameData, helpers) {
   var myHero = gameData.activeHero;
-
+  
   //Get stats on the nearest health well
   var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
     if (boardTile.type === 'HealthWell') {
@@ -74,14 +85,94 @@ var move = function(gameData, helpers) {
   // if full health and no other opportunities, attack enemies (but capture a mine if it is nearby)
   } else if (nearestNonTeamDiamondMineStats.distance <= 2) {
     return nearestNonTeamDiamondMineStats.direction;
-  } else {
+  // sometimes, even though there is a player on the map, they are
+  // unreachable...
+  } else if (nearestEnemyStats.distance >= 1) {
     return nearestEnemyStats.direction;
+  } else {
+    return "Stay";
   }
 
   // todo: sanity check. Flee obviously suicidal situations (i.e. surrounded by 3 enemies and health < 90!)
   // todo: related, with multiple enemies that are equidistant, make sure hero goes after the weakest one.
   // todo: avoid attacking enemies that are within 1 of healthwell (avoid infinite battles)
 };
+
+function findHealthAtRisk(board, hero, dir, helpers) {
+  var origdft,newdft = hero.distanceFromTop;
+  var origdfl,newdft = hero.distanceFromLeft;
+
+  if (direction === 'North') {
+      fromTopNew -= 1;
+  } else if (direction === 'East') {
+      fromLeftNew += 1;
+  } else if (direction === 'South') {
+      fromTopNew += 1;
+  } else if (direction === 'West') {
+      fromLeftNew -= 1;
+  }
+
+  if (!helpers.validCoordinates(board, newdft, newdfl)) {
+    newdft = origdft;
+    newdfl = origdfl;
+  }
+
+  var healthAtRisk = 0
+  
+  // get tile trying to move to
+  var newTile = helpers.getTileNearby(board, newdft, newdfl, dir);
+  
+  // check if tile is blocker
+  if (newTile.type !== 'Unoccupied') {
+    newdft = origdft;
+    newdfl = origdfl;
+    if (newTile.type === 'Hero' && newTile.team != hero.team) {
+      const healthFleeThresh = 30;
+      const fullAttackPts = 30;
+      // assuming they will flee if they have 30 health pts
+      if (newTile.health <= healthFleeThresh + fullAttackPts) {
+      	healthAtRisk -= 30;
+      }
+    } else if (newTile.type === 'DiamondMine') {
+      healthAtRisk += 20;
+    } else if (newTile.type === 'HealthWell') {
+      healthAtRisk -= 40;
+    }
+  }
+
+
+
+}
+
+// Escape Artist
+// Wanders, but is never killed
+function escapeArtist(gameData, helpers) {
+  var myHero = gameData.activeHero;
+  
+  // list length 5 that measures health at risk for choosing a particular dir
+  var healthAtRisk = [];
+  for (var i = 0; i < 5; i++) healthAtRisk.push(Infinity);
+
+  var directions = ["North", "East", "South", "West", "Stay"];
+
+  for (var i = 0; i < 5; i++) {
+    healthAtRisk[i] = findHealthAtRisk(gameData.board, 
+    				       myHero, 
+				       directions[i],
+				       helpers);
+
+  
+  
+  }
+  
+
+
+
+  // randomly select direction
+  // check if direction is safe
+  // 
+
+}
 
 /*
 // The "Selfish Diamond Miner"
@@ -111,3 +202,6 @@ var move = function(gameData, helpers) {
   }
 };
 */
+
+// Export the move function here:
+module.exports = move;
